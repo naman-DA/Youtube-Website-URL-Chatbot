@@ -3,7 +3,7 @@ import validators
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_groq import ChatGroq
-from langchain_community.document_loaders import (YoutubeLoader,UnstructuredURLLoader,)
+from langchain_community.document_loaders import YoutubeLoader, WebBaseLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from youtube_transcript_api._errors import RequestBlocked
 
@@ -68,9 +68,9 @@ if st.button("Summarize the content from YT or Website"):
               )
               st.stop()
           else:
-            loader = UnstructuredURLLoader(urls = [generic_url], ssl_verify = False, headers = {"User-Agent" : "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"},)
+            loader = WebBaseLoader(urls = [generic_url], ssl_verify = False, headers = {"User-Agent" : "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"},)
             docs = loader.load()
-            
+
         if not docs:
             if is_youtube:
                 st.error("No transcript found.")
