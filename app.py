@@ -52,8 +52,9 @@ if st.button("Summarize the content from YT or Website"):
       with st.spinner("Summarizing...."):
         
         ## Loading the YT or Website video content
-        
-        if "youtube.com" in generic_url:
+        is_youtube = "youtube.com" in generic_url or "youtu.be" in generic_url
+          
+        if is_youtube:
           loader = YoutubeLoader.from_youtube_url(generic_url, add_video_info = False)
         else:
           loader = UnstructuredURLLoader(urls = [generic_url], ssl_verify = False, 
@@ -62,15 +63,23 @@ if st.button("Summarize the content from YT or Website"):
         docs = loader.load()
 
       if not docs:
-        st.error("No readable content or transcript found.")
-        st.stop()
-        
+        if is_youtube:
+          st.error("No transcript found.")
+          st.info("This YouTube video does not have captions enabled. " "Please try another video with subtitles.")
+        else:
+            st.error("No readable content found on this webpage.")
+            st.stop()
+
       text = "\n\n".join([doc.page_content for doc in docs if doc.page_content.strip()])
-        
+      
       if not text.strip():
-        st.error("No transcript found.")
-        st.info("This video does not have captions." "Please try another video with subtitles enabled.")
-        st.stop()
+            if is_youtube:
+                st.error("No transcript found.")
+                st.info("This YouTube video does not have captions enabled. " "Please try another video with subtitles.")
+            else:
+                st.error("No readable text found on this webpage.")
+                st.info("This website may block scraping or use dynamic content.")
+            st.stop()
 
       text_splitter = RecursiveCharacterTextSplitter(chunk_size = 1500, chunk_overlap = 200)
       chunks = text_splitter.split_text(text)
