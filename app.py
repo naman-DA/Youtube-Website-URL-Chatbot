@@ -16,9 +16,6 @@ st.subheader("Summarize URL")
 
 ## Get the Groq api key & URL(Youtube or Website) to be summarized
 
-# -------------------------------
-# API Key (Streamlit Secrets first)
-# -------------------------------
 groq_api_key = st.secrets.get("GROQ_API_KEY", "")
 
 with st.sidebar:
@@ -52,7 +49,7 @@ if st.button("Summarize the content from YT or Website"):
     st.error("Please enter the valid URL")
   else:
     try:
-      with st.spinner("Waiting...."):
+      with st.spinner("Summarizing...."):
         
         ## Loading the YT or Website video content
         
@@ -64,28 +61,31 @@ if st.button("Summarize the content from YT or Website"):
                   )
         docs = loader.load()
 
-        text = "\n\n".join([doc.page_content for doc in docs if doc.page_content.strip()])
+      if not docs:
+        st.error("No readable content or transcript found.")
+        st.stop()
         
-        if not text.strip():
-            st.error("No transcript found.")
-            st.info("This video does not have captions." "Please try another video with subtitles enabled.")
-            st.stop()
+      text = "\n\n".join([doc.page_content for doc in docs if doc.page_content.strip()])
+        
+      if not text.strip():
+        st.error("No transcript found.")
+        st.info("This video does not have captions." "Please try another video with subtitles enabled.")
+        st.stop()
 
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size = 1500, chunk_overlap = 200)
+      text_splitter = RecursiveCharacterTextSplitter(chunk_size = 1500, chunk_overlap = 200)
+      chunks = text_splitter.split_text(text)
 
-        chunks = text_splitter.split_text(text)
-
-        if len(chunks) > 20:
-          st.warning("Video is too long. Summarizing first 20 minutes only.")
+      if len(chunks) > 20:
+        st.warning("Video is too long. Summarizing first 20 minutes only.")
     
-        ## Chain for Summarization
+      ## Chain for Summarization
           
-        chain = prompt | llm | StrOutputParser()
-        summaries = []
+      chain = prompt | llm | StrOutputParser()
+      summaries = []
         
-        for chunk in chunks[:5]:
-            summaries.append(chain.invoke({"text": chunk}))
+      for chunk in chunks[:5]:
+        summaries.append(chain.invoke({"text": chunk}))
 
-        st.success("\n".join(summaries))   
+      st.success("\n".join(summaries))   
     except Exception as e:
       st.exception(f"Exception{e}")
