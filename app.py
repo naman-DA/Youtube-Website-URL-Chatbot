@@ -18,7 +18,7 @@ st.subheader("Summarize URL")
 groq_api_key = st.secrets.get("GROQ_API_KEY", "")
 
 with st.sidebar:
-  groq_api_key = st.markdown("#### Groq API Key", type = "password")
+  groq_api_key = st.markdown("#### Groq API Key")
 
 generic_url = st.text_input("URL", label_visibility = "collapsed")
 llm = ChatGroq(model_name="llama-3.1-8b-instant", groq_api_key = groq_api_key)
