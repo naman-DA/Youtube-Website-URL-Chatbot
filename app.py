@@ -5,6 +5,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_groq import ChatGroq
 from langchain_community.document_loaders import (YoutubeLoader,UnstructuredURLLoader,)
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from youtube_transcript_api._errors import RequestBlocked
 
 # Streamlit Config
 
@@ -52,13 +53,24 @@ if st.button("Summarize the content from YT or Website"):
 
     try:
         with st.spinner("Fetching content..."):
-            if is_youtube:
-                loader = YoutubeLoader.from_youtube_url(generic_url, add_video_info = False, language = ["en"],)
-            else:
-                loader = UnstructuredURLLoader(urls = [generic_url], ssl_verify = False,
-                  headers = {"User-Agent" : "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"},)
+          if is_youtube:
+            try:
+              loader = YoutubeLoader.from_youtube_url(generic_url, add_video_info = False, language = ["en"],)
+              docs = loader.load()
+            except RequestBlocked:
+              st.error("YouTube blocked transcript access from this server.")
+              st.info(
+                      "This is a known limitation on Streamlit Cloud.\n\n"
+                      "You can:\n"
+                      "• Try another YouTube video\n"
+                      "• Use a website URL\n"
+                      "• Or add Whisper-based transcription (advanced)"
+              )
+              st.stop()
+          else:
+            loader = UnstructuredURLLoader(urls = [generic_url], ssl_verify = False, headers = {"User-Agent" : "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"},)
             docs = loader.load()
-
+            
         if not docs:
             if is_youtube:
                 st.error("No transcript found.")
@@ -105,5 +117,8 @@ if st.button("Summarize the content from YT or Website"):
 
         st.success("\n\n".join(summaries))
     except Exception as e:
+      if "RequestBlocked" in str(e):
+        st.error("YouTube blocked the request. Try running locally or using a proxy.")
+      else:
         st.error("Something went wrong.")
         st.exception(e)
