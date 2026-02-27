@@ -55,7 +55,8 @@ if st.button("Summarize the content from YT or Website"):
             if is_youtube:
                 loader = YoutubeLoader.from_youtube_url(generic_url, add_video_info = False, language = ["en"],)
             else:
-                loader = UnstructuredURLLoader(urls = [generic_url], ssl_verify = False,headers={"User-Agent": "Mozilla/5.0"},)
+                loader = UnstructuredURLLoader(urls = [generic_url], ssl_verify = False,
+                  headers = {"User-Agent" : "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"},)
             docs = loader.load()
 
         if not docs:
